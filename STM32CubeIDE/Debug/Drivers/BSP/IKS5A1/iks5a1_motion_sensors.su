@@ -1,0 +1,17 @@
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:127:9:IKS5A1_MOTION_SENSOR_Init	64	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:442:9:IKS5A1_MOTION_SENSOR_DeInit	24	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:468:9:IKS5A1_MOTION_SENSOR_GetCapabilities	24	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:494:9:IKS5A1_MOTION_SENSOR_ReadID	24	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:523:9:IKS5A1_MOTION_SENSOR_Enable	24	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:562:9:IKS5A1_MOTION_SENSOR_Disable	24	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:602:9:IKS5A1_MOTION_SENSOR_GetAxes	32	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:642:9:IKS5A1_MOTION_SENSOR_GetAxesRaw	32	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:682:9:IKS5A1_MOTION_SENSOR_GetSensitivity	32	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:723:9:IKS5A1_MOTION_SENSOR_GetOutputDataRate	32	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:763:9:IKS5A1_MOTION_SENSOR_GetFullScale	32	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:804:9:IKS5A1_MOTION_SENSOR_SetOutputDataRate	32	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:844:9:IKS5A1_MOTION_SENSOR_SetFullScale	32	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:890:16:ISM6HG256X_0_Probe	88	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:979:16:ISM330IS_0_Probe	88	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:1067:16:IIS2DULPX_0_Probe	88	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:1144:16:IIS2MDC_0_Probe	88	static

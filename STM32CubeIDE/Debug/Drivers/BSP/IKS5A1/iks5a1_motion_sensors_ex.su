@@ -1,0 +1,12 @@
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors_ex.c:56:9:IKS5A1_MOTION_SENSOR_Read_Register	32	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors_ex.c:220:9:IKS5A1_MOTION_SENSOR_Write_Register	24	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors_ex.c:384:9:IKS5A1_MOTION_SENSOR_ACC_HG_Enable	24	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors_ex.c:425:9:IKS5A1_MOTION_SENSOR_ACC_HG_Disable	24	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors_ex.c:467:9:IKS5A1_MOTION_SENSOR_ACC_HG_GetSensitivity	32	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors_ex.c:509:9:IKS5A1_MOTION_SENSOR_ACC_HG_GetOutputDataRate	32	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors_ex.c:551:9:IKS5A1_MOTION_SENSOR_ACC_HG_SetOutputDataRate	32	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors_ex.c:593:9:IKS5A1_MOTION_SENSOR_ACC_HG_GetFullScale	32	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors_ex.c:635:9:IKS5A1_MOTION_SENSOR_ACC_HG_SetFullScale	32	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors_ex.c:677:9:IKS5A1_MOTION_SENSOR_ACC_HG_GetAxesRaw	32	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors_ex.c:719:9:IKS5A1_MOTION_SENSOR_ACC_HG_GetAxes	32	static
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors_ex.c:763:9:IKS5A1_MOTION_SENSOR_Get_DRDY_Status	32	static

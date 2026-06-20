@@ -1,0 +1,10 @@
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_env_sensors.c:92:9:IKS5A1_ENV_SENSOR_Init	13
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_env_sensors.c:190:9:IKS5A1_ENV_SENSOR_DeInit	3
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_env_sensors.c:216:9:IKS5A1_ENV_SENSOR_GetCapabilities	3
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_env_sensors.c:242:9:IKS5A1_ENV_SENSOR_ReadID	3
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_env_sensors.c:271:9:IKS5A1_ENV_SENSOR_Enable	4
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_env_sensors.c:310:9:IKS5A1_ENV_SENSOR_Disable	4
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_env_sensors.c:350:9:IKS5A1_ENV_SENSOR_GetOutputDataRate	4
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_env_sensors.c:390:9:IKS5A1_ENV_SENSOR_SetOutputDataRate	4
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_env_sensors.c:430:9:IKS5A1_ENV_SENSOR_GetValue	4
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_env_sensors.c:475:16:ILPS22QS_0_Probe	16

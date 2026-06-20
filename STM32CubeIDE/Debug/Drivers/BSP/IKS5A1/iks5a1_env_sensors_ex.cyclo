@@ -1,0 +1,5 @@
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_env_sensors_ex.c:56:9:IKS5A1_ENV_SENSOR_Read_Register	3
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_env_sensors_ex.c:98:9:IKS5A1_ENV_SENSOR_Write_Register	3
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_env_sensors_ex.c:142:9:IKS5A1_ENV_SENSOR_Get_DRDY_Status	6
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_env_sensors_ex.c:223:9:IKS5A1_ENV_SENSOR_Set_One_Shot	3
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_env_sensors_ex.c:256:9:IKS5A1_ENV_SENSOR_Get_One_Shot_Status	3

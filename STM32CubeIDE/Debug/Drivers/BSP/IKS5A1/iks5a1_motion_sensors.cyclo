@@ -1,0 +1,17 @@
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:127:9:IKS5A1_MOTION_SENSOR_Init	30
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:442:9:IKS5A1_MOTION_SENSOR_DeInit	3
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:468:9:IKS5A1_MOTION_SENSOR_GetCapabilities	3
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:494:9:IKS5A1_MOTION_SENSOR_ReadID	3
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:523:9:IKS5A1_MOTION_SENSOR_Enable	4
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:562:9:IKS5A1_MOTION_SENSOR_Disable	4
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:602:9:IKS5A1_MOTION_SENSOR_GetAxes	4
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:642:9:IKS5A1_MOTION_SENSOR_GetAxesRaw	4
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:682:9:IKS5A1_MOTION_SENSOR_GetSensitivity	4
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:723:9:IKS5A1_MOTION_SENSOR_GetOutputDataRate	4
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:763:9:IKS5A1_MOTION_SENSOR_GetFullScale	4
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:804:9:IKS5A1_MOTION_SENSOR_SetOutputDataRate	4
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:844:9:IKS5A1_MOTION_SENSOR_SetFullScale	4
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:890:16:ISM6HG256X_0_Probe	15
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:979:16:ISM330IS_0_Probe	15
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:1067:16:IIS2DULPX_0_Probe	13
+C:/Users/bence/Downloads/x-cube-mems1/Drivers/BSP/IKS5A1/iks5a1_motion_sensors.c:1144:16:IIS2MDC_0_Probe	13
