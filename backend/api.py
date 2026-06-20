@@ -158,8 +158,8 @@ async def get_history(count: int = 100):
 @app.get("/stream")
 async def sse_stream():
     """
-    Server-Sent Events endpoint — pushes every new sensor reading to the client
-    in real time using XREAD BLOCK.
+    Server-Sent Events live feed — pushes every new sensor reading to the client
+    using XREAD BLOCK on the configured Redis Stream key.
 
     Connect with:
       const source = new EventSource('http://localhost:8000/stream');
