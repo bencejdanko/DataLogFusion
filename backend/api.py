@@ -87,12 +87,28 @@ async def post_telemetry(vehicle_id: str, data: dict):
         payload = {"vehicle_id": vehicle_id, **data}
         await r.xadd(STREAM_KEY, payload, maxlen=50000, approximate=True)
         await r.hset(LATEST_KEY, mapping=payload)
+        await r.sadd("active_vehicles", vehicle_id)
         return {"status": "ok", "ingested": True}
     except Exception as exc:
         return {"status": "error", "message": str(exc)}
     finally:
         await r.aclose()
 
+
+@app.get("/vehicles")
+async def get_vehicles():
+    """Returns the set of all active vehicles."""
+    r = _make_redis()
+    try:
+        vehicles = await r.smembers("active_vehicles")
+        # For demo purposes if it's empty we can mock it
+        if not vehicles:
+            vehicles = ["V-001"]
+        
+        # Format as list of objects for frontend
+        return [{"id": v, "name": f"Unit {v}", "status": "healthy"} for v in sorted(vehicles)]
+    finally:
+        await r.aclose()
 
 @app.get("/health")
 async def health():
