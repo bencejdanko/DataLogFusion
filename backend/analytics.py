@@ -3,7 +3,14 @@ import logging
 import os
 import json
 import redis.asyncio as aioredis
-from deepgram import DeepgramClient, SpeakOptions
+try:
+    from deepgram import DeepgramClient, SpeakOptions
+except ImportError:
+    # deepgram-sdk ≥ 7 restructured the speak API.
+    # TTS dispatch will be skipped until the package is aligned.
+    DeepgramClient = None  # type: ignore[assignment,misc]
+    class SpeakOptions:  # type: ignore[no-redef]
+        def __init__(self, **kwargs): pass
 
 logger = logging.getLogger("datalogfusion.analytics")
 
@@ -22,6 +29,9 @@ async def trigger_radio_dispatch(vehicle_id: str, reason: str):
         return
 
     try:
+        if DeepgramClient is None:
+            logger.error("DeepgramClient unavailable (SDK version mismatch). Skipping TTS.")
+            return
         deepgram = DeepgramClient(DEEPGRAM_API_KEY)
         text = f"Attention dispatch. Emergency detected on {vehicle_id}. Reason: {reason}. Please send immediate assistance."
         options = SpeakOptions(
