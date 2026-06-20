@@ -1,0 +1,6 @@
+sounddevice
+numpy
+uagents
+anthropic
+httpx
+python-dotenv

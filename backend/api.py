@@ -477,3 +477,34 @@ def _cast_fields(raw: dict) -> dict:
             pass
             
     return out
+
+
+# ── Incidents ─────────────────────────────────────────────────────────────────
+
+from datetime import datetime, timezone
+from pydantic import BaseModel as _Base
+
+_incidents: list[dict] = []
+
+
+class IncidentIn(_Base):
+    event_type: str
+    event_name: str
+    report: str
+    telemetry_window: list
+
+
+@app.post("/incidents")
+async def post_incident(body: IncidentIn):
+    record = {
+        "id": len(_incidents) + 1,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        **body.model_dump(),
+    }
+    _incidents.append(record)
+    return {"status": "ok", "id": record["id"]}
+
+
+@app.get("/incidents")
+async def get_incidents(limit: int = 10):
+    return list(reversed(_incidents))[:limit]

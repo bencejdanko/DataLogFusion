@@ -4,6 +4,7 @@ import { VehicleList } from './components/VehicleList';
 import { TelemetryDashboard } from './components/TelemetryDashboard';
 import { EmergencyAlert } from './components/EmergencyAlert';
 import { ReportsPage } from './components/ReportsPage';
+import { IncidentPanel } from './components/IncidentPanel';
 import { useSensorStream } from './hooks/useSensorStream';
 import { Vehicle } from './types';
 import { API_BASE_URL } from './config';
@@ -64,11 +65,13 @@ function App() {
         </div>
       )}
 
+      <IncidentPanel />
+
       {emergencyType && activeVehicle && (
-        <EmergencyAlert 
-          vehicleName={activeVehicle.name} 
+        <EmergencyAlert
+          vehicleName={activeVehicle.name}
           incidentType={emergencyType}
-          onDismiss={resetEmergency} 
+          onDismiss={resetEmergency}
         />
       )}
     </div>
