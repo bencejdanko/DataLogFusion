@@ -1,0 +1,190 @@
+"""
+api.py
+------
+DataLogFusion Backend — HTTP API Server
+
+Reads live data from Redis Cloud and exposes it to the dashboard via HTTP.
+
+Endpoints:
+  GET /health          → Redis health check
+  GET /latest          → latest sensor snapshot (JSON)
+  GET /history?count=N → last N readings from the stream (JSON)
+  GET /stream          → Server-Sent Events (SSE) live feed
+"""
+
+import asyncio
+import json
+import logging
+import os
+from typing import AsyncGenerator
+
+import redis.asyncio as aioredis
+from dotenv import load_dotenv
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+
+load_dotenv()
+
+logger = logging.getLogger("datalogfusion.api")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
+    datefmt="%H:%M:%S",
+)
+
+# ── Config ────────────────────────────────────────────────────────────────────
+
+REDIS_HOST     = os.getenv("REDIS_HOST", "coat-generous-snow-13477.db.redis.io")
+REDIS_PORT     = int(os.getenv("REDIS_PORT", "13011"))
+REDIS_USERNAME = os.getenv("REDIS_USERNAME", "default")
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "AU0X7vgAPgJ6lLt6f4yeZQgwlVIyc0XN")
+STREAM_KEY     = os.getenv("REDIS_STREAM_KEY", "sensor:stream")
+LATEST_KEY     = os.getenv("REDIS_LATEST_KEY", "sensor:latest")
+
+# ── App ───────────────────────────────────────────────────────────────────────
+
+app = FastAPI(title="DataLogFusion API", version="1.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
+
+# ── Redis client factory ──────────────────────────────────────────────────────
+
+def _make_redis() -> aioredis.Redis:
+    return aioredis.Redis(
+        host=REDIS_HOST,
+        port=REDIS_PORT,
+        username=REDIS_USERNAME,
+        password=REDIS_PASSWORD,
+        decode_responses=True,
+        socket_connect_timeout=10,
+        socket_timeout=10,
+    )
+
+# ── Routes ────────────────────────────────────────────────────────────────────
+
+@app.get("/health")
+async def health():
+    """Basic health check — pings Redis."""
+    r = _make_redis()
+    try:
+        await r.ping()
+        return {"status": "ok", "redis": "connected"}
+    except Exception as exc:
+        return {"status": "error", "redis": str(exc)}
+    finally:
+        await r.aclose()
+
+
+@app.get("/latest")
+async def get_latest():
+    """
+    Returns the latest sensor reading as a flat JSON object.
+    Sourced from the sensor:latest Hash (updated on every frame by the producer).
+    """
+    r = _make_redis()
+    try:
+        data = await r.hgetall(LATEST_KEY)
+        if not data:
+            return {"error": "No data yet — is the producer running?"}
+        return _cast_fields(data)
+    finally:
+        await r.aclose()
+
+
+@app.get("/history")
+async def get_history(count: int = 100):
+    """
+    Returns the last `count` readings from the Redis Stream (newest first).
+    Query param: ?count=N (default 100, max 1000)
+    """
+    count = min(count, 1000)
+    r = _make_redis()
+    try:
+        entries = await r.xrevrange(STREAM_KEY, count=count)
+        return [
+            {"stream_id": entry_id, **_cast_fields(fields)}
+            for entry_id, fields in entries
+        ]
+    finally:
+        await r.aclose()
+
+
+@app.get("/stream")
+async def sse_stream():
+    """
+    Server-Sent Events endpoint — pushes every new sensor reading to the client
+    in real time using XREAD BLOCK.
+
+    Connect with:
+      const source = new EventSource('http://localhost:8000/stream');
+      source.onmessage = (e) => console.log(JSON.parse(e.data));
+    """
+    return StreamingResponse(
+        _sse_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+async def _sse_generator() -> AsyncGenerator[str, None]:
+    """Tails sensor:stream using XREAD BLOCK and yields SSE-formatted events."""
+    r = _make_redis()
+    last_id = "$"
+
+    try:
+        yield ": connected\n\n"
+        while True:
+            try:
+                results = await r.xread(
+                    {STREAM_KEY: last_id},
+                    block=5000,
+                    count=10,
+                )
+            except Exception as exc:
+                logger.warning("SSE Redis read error: %s", exc)
+                await asyncio.sleep(2)
+                r = _make_redis()
+                continue
+
+            if not results:
+                yield ": keepalive\n\n"
+                continue
+
+            for _stream_name, entries in results:
+                for entry_id, fields in entries:
+                    last_id = entry_id
+                    payload = json.dumps({"id": entry_id, **_cast_fields(fields)})
+                    yield f"data: {payload}\n\n"
+    finally:
+        await r.aclose()
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+_INT_FIELDS = {
+    "acc_x_mg", "acc_y_mg", "acc_z_mg",
+    "gyr_x_mdps", "gyr_y_mdps", "gyr_z_mdps",
+    "mag_x_mgauss", "mag_y_mgauss", "mag_z_mgauss",
+}
+_FLOAT_FIELDS = {"press_hpa", "roll_deg", "pitch_deg", "yaw_deg"}
+
+
+def _cast_fields(raw: dict) -> dict:
+    """Cast string field values back to their proper numeric types."""
+    out = {}
+    for k, v in raw.items():
+        if k in _INT_FIELDS:
+            out[k] = int(v)
+        elif k in _FLOAT_FIELDS:
+            out[k] = float(v)
+        else:
+            out[k] = v
+    return out
