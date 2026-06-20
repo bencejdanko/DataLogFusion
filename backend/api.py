@@ -42,14 +42,23 @@ REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "AU0X7vgAPgJ6lLt6f4yeZQgwlVIyc0XN")
 STREAM_KEY     = os.getenv("REDIS_STREAM_KEY", "sensor:stream")
 LATEST_KEY     = os.getenv("REDIS_LATEST_KEY", "sensor:latest")
 
-# ── App ───────────────────────────────────────────────────────────────────────
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="DataLogFusion API", version="1.0.0")
+from analytics import analytics_worker
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Start the background analytics worker
+    task = asyncio.create_task(analytics_worker())
+    yield
+    task.cancel()
+
+app = FastAPI(title="DataLogFusion API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["GET"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -67,6 +76,23 @@ def _make_redis() -> aioredis.Redis:
     )
 
 # ── Routes ────────────────────────────────────────────────────────────────────
+
+@app.post("/telemetry/{vehicle_id}")
+async def post_telemetry(vehicle_id: str, data: dict):
+    """
+    Ingest hardware sensor data from Raspberry Pi and push to Redis Stream.
+    """
+    r = _make_redis()
+    try:
+        payload = {"vehicle_id": vehicle_id, **data}
+        await r.xadd(STREAM_KEY, payload, maxlen=50000, approximate=True)
+        await r.hset(LATEST_KEY, mapping=payload)
+        return {"status": "ok", "ingested": True}
+    except Exception as exc:
+        return {"status": "error", "message": str(exc)}
+    finally:
+        await r.aclose()
+
 
 @app.get("/health")
 async def health():
