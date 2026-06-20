@@ -1,81 +1,70 @@
 # DataLogFusion Backend
 
-Reads sensor data from the STM32 NUCLEO-F401RE over serial (115200 8N1) and streams it to Redis.
+HTTP API server that reads live sensor data from Redis Cloud and serves it to the dashboard.
 
 ## Data Flow
 
 ```
-STM32 NUCLEO (USB Serial)
-        │  CSV lines @ 115200 8N1
+Redis Cloud (sensor:stream / sensor:latest)
+        │
         ▼
-serial_reader.py  ──queue──▶  redis_publisher.py
-                                    │
-                        ┌───────────┴──────────────┐
-                        ▼                          ▼
-                 sensor:stream              sensor:latest
-               (Redis Stream)              (Redis Hash)
-               full time-series           latest snapshot
+    api.py  (FastAPI + uvicorn)
+        │
+   ┌────┴─────┐
+   ▼          ▼
+GET /latest  GET /stream
+(snapshot)   (SSE — live feed)
 ```
+
+## API Endpoints
+
+| Endpoint | Description |
+|---|---|
+| `GET /health` | Redis connection check |
+| `GET /latest` | Latest sensor reading (JSON) |
+| `GET /history?count=N` | Last N readings, newest first (default 100) |
+| `GET /stream` | SSE live feed — streams every new reading |
+
+## Setup
+
+```bash
+pip install -r requirements.txt
+python main.py
+```
+
+Server starts on `http://0.0.0.0:8000`.
+
+## Connect from a dashboard
+
+**Snapshot:**
+```js
+const res = await fetch('http://localhost:8000/latest');
+const data = await res.json();
+```
+
+**Live SSE stream:**
+```js
+const source = new EventSource('http://localhost:8000/stream');
+source.onmessage = (e) => {
+  const reading = JSON.parse(e.data);
+  // { id, timestamp, acc_x_mg, gyr_x_mdps, roll_deg, ... }
+};
+```
+
+## No live data? Load the sample CSV
+
+```bash
+python load_sample.py
+```
+
+Pushes all 1013 rows from `sample-data/sample.csv` into Redis for testing.
 
 ## Redis Keys
 
 | Key | Type | Description |
 |---|---|---|
-| `sensor:stream` | Stream | Full time-series via `XADD` (capped at 50 000 entries) |
-| `sensor:latest` | Hash | Latest reading, overwritten on every frame via `HSET` |
-
-## Setup
-
-### 1. Install dependencies
-
-```bash
-cd backend
-pip install -r requirements.txt
-```
-
-### 2. Start Redis (Docker)
-
-```bash
-docker run -d --name redis -p 6379:6379 redis
-```
-
-### 3. Configure (optional)
-
-Edit `backend/.env` if you need to override defaults:
-
-```dotenv
-SERIAL_PORT=AUTO          # or e.g. /dev/tty.usbmodem1234
-SERIAL_BAUD=115200
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
-REDIS_STREAM_KEY=sensor:stream
-REDIS_LATEST_KEY=sensor:latest
-REDIS_STREAM_MAXLEN=50000
-```
-
-### 4. Connect the board and run
-
-```bash
-python main.py
-```
-
-The app will auto-detect the NUCLEO board by USB VID (`0x0483`). If detection fails, set `SERIAL_PORT` explicitly in `.env`.
-
-## Verify in Redis CLI
-
-```bash
-docker exec -it redis redis-cli
-
-# Check stream length
-XLEN sensor:stream
-
-# Read last 5 entries
-XREVRANGE sensor:stream + - COUNT 5
-
-# Check latest snapshot
-HGETALL sensor:latest
-```
+| `sensor:stream` | Stream | Full time-series (`XADD`) |
+| `sensor:latest` | Hash | Latest reading only (`HSET`) |
 
 ## Fields
 
