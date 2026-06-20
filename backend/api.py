@@ -64,14 +64,23 @@ app.add_middleware(
 
 # ── Redis client factory ──────────────────────────────────────────────────────
 
+# Global Redis client to share the connection pool
+redis_client = None
+
 def _make_redis() -> aioredis.Redis:
-    return aioredis.Redis(
-        host=REDIS_HOST,
-        port=REDIS_PORT,
-        username=REDIS_USERNAME,
-        password=REDIS_PASSWORD,
-        decode_responses=True,
-    )
+    global redis_client
+    if redis_client is None:
+        redis_client = aioredis.Redis(
+            host=REDIS_HOST,
+            port=REDIS_PORT,
+            username=REDIS_USERNAME,
+            password=REDIS_PASSWORD,
+            decode_responses=True,
+            socket_connect_timeout=5,
+            socket_timeout=5,
+            max_connections=10
+        )
+    return redis_client
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
@@ -99,14 +108,16 @@ async def get_vehicles():
     r = _make_redis()
     try:
         vehicles = await r.smembers("active_vehicles")
-        # For demo purposes if it's empty we can mock it
-        if not vehicles:
-            vehicles = ["V-001"]
+    except Exception as exc:
+        logger.error("Error in /vehicles: %s", exc)
+        vehicles = set()
         
-        # Format as list of objects for frontend
-        return [{"id": v, "name": f"Unit {v}", "status": "healthy"} for v in sorted(vehicles)]
-    finally:
-        await r.aclose()
+    # For demo purposes if it's empty we can mock it
+    if not vehicles:
+        vehicles = ["V-001"]
+    
+    # Format as list of objects for frontend
+    return [{"id": v, "name": f"Unit {v}", "status": "healthy"} for v in sorted(vehicles)]
 
 @app.get("/health")
 async def health():
@@ -117,8 +128,6 @@ async def health():
         return {"status": "ok", "redis": "connected"}
     except Exception as exc:
         return {"status": "error", "redis": str(exc)}
-    finally:
-        await r.aclose()
 
 
 @app.get("/latest")
@@ -151,8 +160,9 @@ async def get_history(count: int = 100):
             {"stream_id": entry_id, **_cast_fields(fields)}
             for entry_id, fields in entries
         ]
-    finally:
-        await r.aclose()
+    except Exception as exc:
+        logger.error("Error in /history: %s", exc, exc_info=True)
+        return {"status": "error", "message": str(exc)}
 
 
 @app.get("/stream")
@@ -215,7 +225,7 @@ async def _sse_generator() -> AsyncGenerator[str, None]:
                     payload = json.dumps({"id": entry_id, **_cast_fields(fields)})
                     yield f"data: {payload}\n\n"
     finally:
-        await r.aclose()
+        pass
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
