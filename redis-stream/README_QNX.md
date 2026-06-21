@@ -32,9 +32,57 @@ which QNX Neutrino supports natively.
 
 ---
 
+## Detecting the Serial Device on QNX
+
+When the STM32 board is connected via USB, QNX exposes it through a
+**USB-serial resource manager** (`devc-serusb`).  Use the steps below to
+find the correct device path before running the streamer.
+
+### 1. List available serial devices
+
+```sh
+ls /dev/ser*
+```
+
+QNX may enumerate the USB-serial adapter as either:
+- **`/dev/serusb1`** — when `devc-serusb` creates a dedicated namespace
+- **`/dev/ser10`** (or similar number) — when the system `devc-serusb` assigns the next available serial slot
+
+Use whichever path appears. Confirm data is flowing:
+
+```sh
+cat /dev/ser10        # adjust number as needed
+```
+
+You should see CSV lines scrolling at ~100 Hz. Press `Ctrl+C` to stop.
+
+### 3. If no device appears — start the USB-serial driver
+
+QNX does not always auto-start `devc-serusb`.  Start it manually:
+
+```sh
+chmod +x devc-serusb
+devc-serusb &
+```
+
+Then re-check `ls /dev/serusb*`.  On some QNX images the driver is
+`devc-serusb2` or needs a specific USB path argument — check your BSP docs.
+
+### 4. Pass the device to the streamer
+
+```sh
+# Use the detected device (default is already /dev/serusb1)
+./mems_stream /dev/serusb1
+
+# If enumerated as serusb2, serusb3, etc.
+./mems_stream /dev/serusb2
+```
+
+---
+
 ## Building on QNX (native compile on the target)
 
-If your QNX image includes a C compiler (`qcc` or `cc`):
+If your QNX image includes a C compiler (`cc`):
 
 ```sh
 # first on host machine copy over
@@ -44,55 +92,6 @@ scp -o MACs=hmac-sha2-256 main.c qnxuser@172.20.10.7:/data/home/qnxuser
 # On the QNX Raspberry Pi target
 cc -o mems_stream main.c -lsocket
 ```
-
-> **Note:** On some QNX builds the socket functions live in `libc` and `-lsocket`
-> is not needed. If you get linker errors, try without it:
-> ```sh
-> cc -o mems_stream mems_stream.c
-> ```
-
----
-
-## Cross-Compiling from a QNX SDP Host (Linux / Windows)
-
-If you have the **QNX Software Development Platform (SDP)** installed on your
-development machine, cross-compile with the `qcc` wrapper:
-
-### 1. Initialise the QNX environment
-
-```sh
-# Adjust the path to match your SDP version (7.1 / 8.0 etc.)
-source ~/qnx800/qnxsdp-env.sh
-```
-
-### 2. Identify your target architecture
-
-| Raspberry Pi model | Architecture flag |
-|--------------------|-------------------|
-| RPi 3 / 4 (64-bit QNX) | `gcc_ntoaarch64le` |
-| RPi 2 / Zero (32-bit QNX) | `gcc_ntoarmv7le` |
-
-### 3. Compile
-
-```sh
-# 64-bit ARM (most common for RPi 3/4)
-qcc -V gcc_ntoaarch64le -o mems_stream mems_stream.c -lsocket
-
-# 32-bit ARM
-qcc -V gcc_ntoarmv7le  -o mems_stream mems_stream.c -lsocket
-```
-
-### 4. Copy the binary to the target
-
-```sh
-scp mems_stream user@<rpi-ip>:/home/user/
-```
-
----
-
-## Running
-
-```sh
 # Default: /dev/serusb1 @ 115200 baud
 ./mems_stream
 
