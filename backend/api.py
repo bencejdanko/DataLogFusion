@@ -45,13 +45,16 @@ LATEST_KEY     = os.getenv("REDIS_LATEST_KEY", "sensor:latest")
 from contextlib import asynccontextmanager
 
 from analytics import analytics_worker
+from simulator import simulator_worker
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Start the background analytics worker
-    task = asyncio.create_task(analytics_worker())
+    task1 = asyncio.create_task(analytics_worker())
+    task2 = asyncio.create_task(simulator_worker())
     yield
-    task.cancel()
+    task1.cancel()
+    task2.cancel()
     if redis_client is not None:
         await redis_client.aclose()
 
@@ -113,12 +116,17 @@ async def get_vehicles():
         logger.error("Error in /vehicles: %s", exc)
         vehicles = set()
         
-    # For demo purposes if it's empty we can mock it
-    if not vehicles:
-        vehicles = ["V-001"]
+    # Ensure the real streaming car is always in the list
+    vehicles = set(vehicles)
+    vehicles.add("V-001")
     
     # Format as list of objects for frontend
-    return [{"id": v, "name": f"Unit {v}", "status": "healthy"} for v in sorted(vehicles)]
+    vehicle_names = {
+        "V-002": "San Fierro Deputy",
+        "V-003": "Las Venturas Responder",
+        "V-004": "Los Santos Cruisers"
+    }
+    return [{"id": v, "name": vehicle_names.get(v, f"Unit {v}"), "status": "healthy"} for v in sorted(vehicles)]
 
 @app.get("/health")
 async def health():
