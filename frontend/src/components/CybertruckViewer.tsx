@@ -45,7 +45,7 @@ interface Euler {
 }
 
 export const CybertruckViewer = ({ pitch, roll, yaw, isEmergency }: Props) => {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<any>(null);
   const nodeRef = useRef<number | null>(null);
   const baseRef = useRef<Mat4 | null>(null);
@@ -69,8 +69,8 @@ export const CybertruckViewer = ({ pitch, roll, yaw, isEmergency }: Props) => {
 
     loadSketchfabApi()
       .then((Sketchfab) => {
-        if (cancelled || !iframeRef.current) return;
-        const client = new Sketchfab(iframeRef.current);
+        if (cancelled || !containerRef.current) return;
+        const client = new Sketchfab(containerRef.current);
         client.init(MODEL_UID, {
           autostart: 1,
           preload: 1,
@@ -168,13 +168,13 @@ export const CybertruckViewer = ({ pitch, roll, yaw, isEmergency }: Props) => {
         </span>
       </div>
 
-      <iframe
-        ref={iframeRef}
-        className={styles.frame}
-        title="Cybertruck attitude model"
-        allow="autoplay; fullscreen; xr-spatial-tracking"
-        src={`https://sketchfab.com/models/${MODEL_UID}/embed`}
-      />
+      <div className={styles.frameWrapper}>
+        <div
+          ref={containerRef}
+          className={styles.frame}
+          title="Cybertruck attitude model"
+        />
+      </div>
 
       {!ready && !failed && (
         <div className={styles.loading}>
