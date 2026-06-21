@@ -61,8 +61,8 @@ export const TelemetryDashboard = ({ vehicleName, isEmergency, currentData, data
         <div className={styles.statStack}>
           <div className={`${styles.kpiCard} glass-panel`}>
             <div className={styles.kpiLabel}><Gauge size={18} weight="duotone" /> Impact G-Force</div>
-            <div className={`${styles.kpiValue} mono`} style={{ color: currentData.gForce && currentData.gForce > 4.0 ? 'var(--error-color, #ef4444)' : 'inherit' }}>
-              {currentData.gForce !== undefined ? currentData.gForce.toFixed(2) : '0.00'}<span className={styles.kpiUnit}>G</span>
+            <div className={`${styles.kpiValue} mono`} style={{ color: currentData?.gForce && currentData.gForce > 4.0 ? 'var(--error-color, #ef4444)' : 'inherit' }}>
+              {currentData?.gForce !== undefined ? currentData.gForce.toFixed(2) : '0.00'}<span className={styles.kpiUnit}>G</span>
             </div>
           </div>
           <div className={`${styles.kpiCard} glass-panel`}>
