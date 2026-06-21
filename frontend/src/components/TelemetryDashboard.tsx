@@ -91,14 +91,14 @@ export const TelemetryDashboard = ({ vehicleName, isEmergency, currentData, data
               <LineChart data={dataStream}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                 <XAxis dataKey="time" hide />
-                <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} width={40} />
+                <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} width={60} domain={[-100000, 100000]} />
                 <Tooltip
                   contentStyle={{ backgroundColor: 'rgba(9, 9, 11, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', backdropFilter: 'blur(10px)' }}
                   itemStyle={{ fontSize: '13px' }}
                 />
-                <Line type="monotone" dataKey="gyroX" stroke="#06b6d4" strokeWidth={2} dot={false} isAnimationActive={false} />
-                <Line type="monotone" dataKey="gyroY" stroke="#10b981" strokeWidth={2} dot={false} isAnimationActive={false} />
-                <Line type="monotone" dataKey="gyroZ" stroke="#f59e0b" strokeWidth={2} dot={false} isAnimationActive={false} />
+                <Line type="basis" dataKey="gyroX" stroke="#06b6d4" strokeWidth={2} dot={false} isAnimationActive={false} />
+                <Line type="basis" dataKey="gyroY" stroke="#10b981" strokeWidth={2} dot={false} isAnimationActive={false} />
+                <Line type="basis" dataKey="gyroZ" stroke="#f59e0b" strokeWidth={2} dot={false} isAnimationActive={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
