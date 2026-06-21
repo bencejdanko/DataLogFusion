@@ -17,6 +17,7 @@ agent = Agent(
     name="stripe-horoscope-agent",
     seed=os.getenv("AGENT_SEED", "datalogfusion-stripe-horoscope-seed-unique"),
     port=int(os.getenv("AGENT_PORT", "8012")),
+    endpoint=["http://127.0.0.1:8012/submit"],
     mailbox=True,
     publish_agent_details=True,
 )
