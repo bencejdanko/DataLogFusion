@@ -8,13 +8,13 @@
  * while preserving the model's authored placement and scale (the `base` matrix).
  */
 
-export type Mat4 = number[]; // length 16, column-major
+export type Mat4 = number[] | Float32Array | Float64Array; // length 16, column-major
 
 const deg2rad = (d: number) => (d * Math.PI) / 180;
 
 /** Multiply two column-major matrices: returns a * b. */
 export function multiply(a: Mat4, b: Mat4): Mat4 {
-  const o = new Array(16);
+  const o = new Float32Array(16);
   for (let c = 0; c < 4; c++) {
     for (let r = 0; r < 4; r++) {
       o[c * 4 + r] =

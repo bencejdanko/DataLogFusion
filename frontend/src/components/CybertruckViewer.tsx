@@ -173,6 +173,7 @@ export const CybertruckViewer = ({ pitch, roll, yaw, isEmergency }: Props) => {
         className={styles.frame}
         title="Cybertruck attitude model"
         allow="autoplay; fullscreen; xr-spatial-tracking"
+        src={`https://sketchfab.com/models/${MODEL_UID}/embed`}
       />
 
       {!ready && !failed && (
