@@ -72,7 +72,7 @@ function App() {
         </div>
       )}
 
-      <IncidentPanel forceShow={!!emergencyType} />
+      {/* <IncidentPanel forceShow={!!emergencyType} /> */}
 
       {emergencyType && activeVehicle && (
         <EmergencyAlert
