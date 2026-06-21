@@ -215,11 +215,12 @@ static void MX_DataLogFusion_Init(void)
   UART_StartReceiveMsg();
 
   /* Automatically enable sensors and start logging at startup */
-  SensorsEnabled = ACCELEROMETER_SENSOR | GYROSCOPE_SENSOR | MAGNETIC_SENSOR | PRESSURE_SENSOR;
+  SensorsEnabled = ACCELEROMETER_SENSOR | GYROSCOPE_SENSOR | MAGNETIC_SENSOR | PRESSURE_SENSOR | TEMPERATURE_SENSOR;
   BSP_SENSOR_ACC_Enable();
   BSP_SENSOR_GYR_Enable();
   BSP_SENSOR_MAG_Enable();
   BSP_SENSOR_PRESS_Enable();
+  BSP_SENSOR_TEMP_Enable();
 
   /* Start MotionFX Sensor Fusion 9X engine */
   MotionFX_manager_start_9X();
@@ -229,7 +230,7 @@ static void MX_DataLogFusion_Init(void)
   DataLoggerActive = 1;
 
   /* Print CSV header once for easy parsing */
-  printf("timestamp,acc_x_mg,acc_y_mg,acc_z_mg,gyr_x_mdps,gyr_y_mdps,gyr_z_mdps,mag_x_mgauss,mag_y_mgauss,mag_z_mgauss,press_hpa,roll_deg,pitch_deg,yaw_deg\r\n");
+  printf("timestamp,acc_x_mg,acc_y_mg,acc_z_mg,gyr_x_mdps,gyr_y_mdps,gyr_z_mdps,mag_x_mgauss,mag_y_mgauss,mag_z_mgauss,press_hpa,roll_deg,pitch_deg,yaw_deg,temp_c\r\n");
 }
 
 /**
@@ -337,6 +338,8 @@ static void MX_DataLogFusion_Process(void)
       print_float(euler[1], 2);
       printf(",");
       print_float(euler[2], 2);
+      printf(",");
+      print_float(TempValue, 2);
       printf("\r\n");
     }
   }

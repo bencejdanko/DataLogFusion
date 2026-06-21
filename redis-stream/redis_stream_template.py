@@ -20,7 +20,7 @@ data_queue = Queue()
 def parse_line(line):
     """
     Parses a CSV line from the serial port.
-    Expected format: timestamp,acc_x,acc_y,acc_z,gyr_x,gyr_y,gyr_z,mag_x,mag_y,mag_z,press,roll,pitch,yaw
+    Expected format: timestamp,acc_x,acc_y,acc_z,gyr_x,gyr_y,gyr_z,mag_x,mag_y,mag_z,press,roll,pitch,yaw,temp
     """
     line = line.strip()
     if not line or line.startswith("timestamp"):
@@ -45,7 +45,8 @@ def parse_line(line):
             "press": float(parts[10]),
             "roll": float(parts[11]),
             "pitch": float(parts[12]),
-            "yaw": float(parts[13])
+            "yaw": float(parts[13]),
+            "temp": float(parts[14]) if len(parts) > 14 else 0.0
         }
     except ValueError:
         return None
@@ -95,7 +96,8 @@ def redis_writer(redis_url):
                         "press": s["press"],
                         "roll": s["roll"],
                         "pitch": s["pitch"],
-                        "yaw": s["yaw"]
+                        "yaw": s["yaw"],
+                        "temp": s["temp"]
                     })
                 
                 pipe.execute()

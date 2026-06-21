@@ -65,6 +65,7 @@ void BSP_SENSOR_PRESS_Init(void)
   */
 void BSP_SENSOR_TEMP_Init(void)
 {
+  (void)IKS5A1_ENV_SENSOR_Init(IKS5A1_ILPS22QS_0, ENV_TEMPERATURE);
 }
 
 /**
@@ -123,6 +124,7 @@ void BSP_SENSOR_PRESS_Enable(void)
   */
 void BSP_SENSOR_TEMP_Enable(void)
 {
+  (void)IKS5A1_ENV_SENSOR_Enable(IKS5A1_ILPS22QS_0, ENV_TEMPERATURE);
 }
 
 /**
@@ -181,6 +183,7 @@ void BSP_SENSOR_PRESS_Disable(void)
   */
 void BSP_SENSOR_TEMP_Disable(void)
 {
+  (void)IKS5A1_ENV_SENSOR_Disable(IKS5A1_ILPS22QS_0, ENV_TEMPERATURE);
 }
 
 /**
@@ -239,6 +242,7 @@ void BSP_SENSOR_PRESS_GetValue(float *Value)
   */
 void BSP_SENSOR_TEMP_GetValue(float *Value)
 {
+  (void)IKS5A1_ENV_SENSOR_GetValue(IKS5A1_ILPS22QS_0, ENV_TEMPERATURE, Value);
 }
 
 /**
@@ -297,6 +301,7 @@ void BSP_SENSOR_PRESS_SetOutputDataRate(float Odr)
   */
 void BSP_SENSOR_TEMP_SetOutputDataRate(float Odr)
 {
+  (void)IKS5A1_ENV_SENSOR_SetOutputDataRate(IKS5A1_ILPS22QS_0, ENV_TEMPERATURE, Odr);
 }
 
 /**
@@ -355,6 +360,7 @@ void BSP_SENSOR_PRESS_GetOutputDataRate(float *Odr)
   */
 void BSP_SENSOR_TEMP_GetOutputDataRate(float *Odr)
 {
+  (void)IKS5A1_ENV_SENSOR_GetOutputDataRate(IKS5A1_ILPS22QS_0, ENV_TEMPERATURE, Odr);
 }
 
 /**

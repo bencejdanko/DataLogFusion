@@ -90,9 +90,9 @@ static char *resp_bulk(char *buf, const char *s) {
 
 /*
  * Build a complete RESP array for:
- *   XADD /data/mems * ts <ts> acc_x <v> ... yaw <v>
+ *   XADD /data/mems * ts <ts> acc_x <v> ... temp <v>
  *
- * Fields: 14 key-value pairs → total array elements = 3 + 14*2 = 31
+ * Fields: 15 key-value pairs → total array elements = 3 + 15*2 = 33
  */
 static int build_xadd(char *out, size_t cap,
                        const char *ts,
@@ -100,11 +100,12 @@ static int build_xadd(char *out, size_t cap,
                        const char *gyr_x, const char *gyr_y, const char *gyr_z,
                        const char *mag_x, const char *mag_y, const char *mag_z,
                        const char *press,
-                       const char *roll,  const char *pitch, const char *yaw)
+                       const char *roll,  const char *pitch, const char *yaw,
+                       const char *temp)
 {
     char *p = out;
-    /* 3 fixed + 28 field/value tokens = 31 */
-    p += snprintf(p, cap - (size_t)(p - out), "*31\r\n");
+    /* 3 fixed + 30 field/value tokens = 33 */
+    p += snprintf(p, cap - (size_t)(p - out), "*33\r\n");
     p = resp_bulk(p, "XADD");
     p = resp_bulk(p, REDIS_STREAM);
     p = resp_bulk(p, "*");   /* auto-generate stream ID */
@@ -124,6 +125,7 @@ static int build_xadd(char *out, size_t cap,
     p = resp_bulk(p, "roll");  p = resp_bulk(p, roll);
     p = resp_bulk(p, "pitch"); p = resp_bulk(p, pitch);
     p = resp_bulk(p, "yaw");   p = resp_bulk(p, yaw);
+    p = resp_bulk(p, "temp");  p = resp_bulk(p, temp);
 
     return (int)(p - out);
 }
@@ -338,7 +340,7 @@ static int serial_readline(int fd, char *buf, int maxlen) {
  * CSV parser
  * ================================================================ */
 
-#define NUM_FIELDS 14
+#define NUM_FIELDS 15
 
 /*
  * Split a CSV line into exactly NUM_FIELDS fields.
@@ -359,7 +361,13 @@ static int csv_split(char *line, char *fields[NUM_FIELDS]) {
         if (!p) break;
         *p++ = '\0';
     }
-    return (i == NUM_FIELDS) ? 0 : -1;
+    if (i < 14) {
+        return -1;
+    }
+    if (i == 14) {
+        fields[14] = "0.0";
+    }
+    return 0;
 }
 
 /* ================================================================
@@ -455,7 +463,8 @@ int main(int argc, char *argv[]) {
                               fields[10], /* press */
                               fields[11], /* roll  */
                               fields[12], /* pitch */
-                              fields[13]  /* yaw   */);
+                              fields[13], /* yaw   */
+                              fields[14]  /* temp  */);
 
         if (tcp_send_all(rfd, send_buf, len) < 0) {
             fprintf(stderr, "[redis] send failed: %s — attempting reconnect...\n",
