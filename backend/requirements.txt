@@ -10,3 +10,4 @@ httpx>=0.25.0
 uagents
 openai
 sounddevice>=0.4.6
+stripe

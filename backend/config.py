@@ -32,3 +32,12 @@ AGENTVERSE_KEY = os.getenv("AGENTVERSE_KEY")
 AGENTVERSE_KEY_DIS = os.getenv("AGENTVERSE_KEY_DIS")
 AGENTVERSE_KEY_SYNTH = os.getenv("AGENTVERSE_KEY_SYNTH")
 AGENTVERSE_KEY_ORCH = os.getenv("AGENTVERSE_KEY_ORCH", AGENTVERSE_KEY)
+
+# Stripe Config
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
+STRIPE_AMOUNT_CENTS = int(os.getenv("STRIPE_AMOUNT_CENTS", "100"))  # $1.00
+STRIPE_CURRENCY = (os.getenv("STRIPE_CURRENCY", "usd") or "usd").strip().lower()
+STRIPE_PRODUCT_NAME = (os.getenv("STRIPE_PRODUCT_NAME", "Daily horoscope") or "Daily horoscope").strip()
+STRIPE_SUCCESS_URL = (os.getenv("STRIPE_SUCCESS_URL", "https://agentverse.ai/payment-success") or "").strip()
+
