@@ -1,35 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { useGLTF, Environment, ContactShadows, OrbitControls, Center } from '@react-three/drei';
+import * as THREE from 'three';
 import styles from './CybertruckViewer.module.css';
 import { Cube, Warning } from '@phosphor-icons/react';
-import { Mat4, attitudeMatrix, lerpAngle } from '../lib/attitude';
-
-// The model the user provided: "2027 Taffy Bayou" (Cybertruck) on Sketchfab.
-const MODEL_UID = '175690ab8cf44b30b5552e640d30f38e';
-const SKETCHFAB_API = 'https://static.sketchfab.com/api/sketchfab-viewer-1.12.1.js';
-
-declare global {
-  interface Window {
-    Sketchfab?: any;
-  }
-}
-
-function loadSketchfabApi(): Promise<any> {
-  return new Promise((resolve, reject) => {
-    if (window.Sketchfab) return resolve(window.Sketchfab);
-    const existing = document.querySelector<HTMLScriptElement>(`script[src="${SKETCHFAB_API}"]`);
-    if (existing) {
-      existing.addEventListener('load', () => resolve(window.Sketchfab));
-      existing.addEventListener('error', reject);
-      return;
-    }
-    const s = document.createElement('script');
-    s.src = SKETCHFAB_API;
-    s.async = true;
-    s.onload = () => resolve(window.Sketchfab);
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-}
 
 interface Props {
   pitch: number;
@@ -38,124 +12,88 @@ interface Props {
   isEmergency: boolean;
 }
 
-interface Euler {
-  pitch: number;
-  roll: number;
-  yaw: number;
+// Preload the model so it's ready quickly
+useGLTF.preload('/cybertruck.glb');
+
+// Inner 3D model component
+function AttitudeModel({ pitch, roll, yaw, setReady }: any) {
+  // useGLTF caches the model automatically
+  const { scene } = useGLTF('/cybertruck.glb');
+  const groupRef = useRef<THREE.Group>(null);
+  
+  // Entrance animation state
+  const entranceAnim = useRef({ time: 0, completed: false });
+  const TARGET_SCALE = 0.3; // Decreased size so sides are visible
+  
+  // Notify parent that model has loaded
+  useEffect(() => {
+    setReady(true);
+  }, [setReady]);
+
+  useFrame((state, delta) => {
+    if (!groupRef.current) return;
+    
+    // Convert degrees to radians
+    const deg2rad = (d: number) => (d * Math.PI) / 180;
+    
+    if (!entranceAnim.current.completed) {
+      entranceAnim.current.time += delta;
+      // 1.5 second entrance animation
+      const progress = Math.min(entranceAnim.current.time / 1.5, 1); 
+      
+      // easeOutCubic
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      
+      // Animate scale up
+      const currentScale = TARGET_SCALE * easeOut;
+      groupRef.current.scale.set(currentScale, currentScale, currentScale);
+      
+      // Spin offset (2 full spins = 4 PI)
+      const spinOffset = (1 - easeOut) * Math.PI * 4;
+      
+      const targetEuler = new THREE.Euler(
+        deg2rad(pitch), 
+        deg2rad(-yaw) + spinOffset, 
+        deg2rad(roll), 
+        'YXZ'
+      );
+      groupRef.current.quaternion.setFromEuler(targetEuler);
+      
+      if (progress === 1) {
+        entranceAnim.current.completed = true;
+      }
+      return;
+    }
+    
+    // Normal telemetry tracking after entrance
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const t = prefersReduced ? 1 : Math.min(delta * 10, 1);
+    
+    const targetEuler = new THREE.Euler(
+      deg2rad(pitch), 
+      deg2rad(-yaw), // Invert yaw if necessary to match rotation direction
+      deg2rad(roll), 
+      'YXZ'
+    );
+    
+    // Smoothly interpolate current rotation to target rotation using quaternion slerp
+    const targetQuat = new THREE.Quaternion().setFromEuler(targetEuler);
+    if (!groupRef.current.quaternion.equals(targetQuat)) {
+      groupRef.current.quaternion.slerp(targetQuat, t);
+    }
+  });
+
+  return (
+    <group ref={groupRef} scale={[0, 0, 0]}>
+      <Center>
+        <primitive object={scene} />
+      </Center>
+    </group>
+  );
 }
 
 export const CybertruckViewer = ({ pitch, roll, yaw, isEmergency }: Props) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const apiRef = useRef<any>(null);
-  const nodeRef = useRef<number | null>(null);
-  const baseRef = useRef<Mat4 | null>(null);
-  const targetRef = useRef<Euler>({ pitch: 0, roll: 0, yaw: 0 });
-  const currentRef = useRef<Euler>({ pitch: 0, roll: 0, yaw: 0 });
-  const lastPushedRef = useRef<Euler>({ pitch: 999, roll: 999, yaw: 999 });
-  const rafRef = useRef<number | null>(null);
-
   const [ready, setReady] = useState(false);
-  const [failed, setFailed] = useState(false);
-
-  // Keep the live attitude target in a ref so the animation loop reads the
-  // latest values without re-subscribing every frame.
-  useEffect(() => {
-    targetRef.current = { pitch, roll, yaw };
-  }, [pitch, roll, yaw]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    loadSketchfabApi()
-      .then((Sketchfab) => {
-        if (cancelled || !containerRef.current) return;
-        const client = new Sketchfab(containerRef.current);
-        client.init(MODEL_UID, {
-          autostart: 1,
-          preload: 1,
-          transparent: 1,
-          autospin: 1,
-          ui_infos: 0,
-          ui_controls: 0,
-          ui_stop: 0,
-          ui_watermark: 0,
-          ui_watermark_link: 0,
-          ui_ar: 0,
-          ui_help: 0,
-          ui_settings: 0,
-          ui_vr: 0,
-          ui_fullscreen: 0,
-          ui_annotations: 0,
-          scrollwheel: 0,
-          ui_theme: 'dark',
-          success: (api: any) => {
-            apiRef.current = api;
-            api.start();
-            api.addEventListener('viewerready', () => {
-              if (cancelled) return;
-              // Find the model's root transform node so we can drive its orientation.
-              api.getNodeMap((err: any, nodes: Record<string, any>) => {
-                if (err || cancelled) return;
-                const transform = Object.values(nodes).find(
-                  (n: any) => n.type === 'MatrixTransform'
-                ) as any;
-                if (!transform) return;
-                nodeRef.current = transform.instanceID;
-                api.getMatrix(transform.instanceID, (mErr: any, matrix: Mat4) => {
-                  if (mErr || cancelled) return;
-                  baseRef.current = matrix;
-                  setReady(true);
-                  startLoop();
-                });
-              });
-            });
-          },
-          error: () => {
-            if (!cancelled) setFailed(true);
-          },
-        });
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      });
-
-    const startLoop = () => {
-      const tick = () => {
-        const api = apiRef.current;
-        const base = baseRef.current;
-        const node = nodeRef.current;
-        if (api && base && node != null) {
-          const cur = currentRef.current;
-          const tgt = targetRef.current;
-          const t = prefersReduced ? 1 : 0.12;
-          cur.pitch = lerpAngle(cur.pitch, tgt.pitch, t);
-          cur.roll = lerpAngle(cur.roll, tgt.roll, t);
-          cur.yaw = lerpAngle(cur.yaw, tgt.yaw, t);
-
-          const last = lastPushedRef.current;
-          const moved =
-            Math.abs(cur.pitch - last.pitch) > 0.05 ||
-            Math.abs(cur.roll - last.roll) > 0.05 ||
-            Math.abs(cur.yaw - last.yaw) > 0.05;
-          if (moved) {
-            api.setMatrix(node, attitudeMatrix(base, cur.pitch, cur.roll, cur.yaw));
-            last.pitch = cur.pitch;
-            last.roll = cur.roll;
-            last.yaw = cur.yaw;
-          }
-        }
-        rafRef.current = requestAnimationFrame(tick);
-      };
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
-    return () => {
-      cancelled = true;
-      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
-      apiRef.current = null;
-    };
-  }, []);
 
   return (
     <div className={`${styles.viewer} ${isEmergency ? styles.emergency : ''}`}>
@@ -169,24 +107,22 @@ export const CybertruckViewer = ({ pitch, roll, yaw, isEmergency }: Props) => {
       </div>
 
       <div className={styles.frameWrapper}>
-        <div
-          ref={containerRef}
-          className={styles.frame}
-          title="Cybertruck attitude model"
-        />
+        <Canvas camera={{ position: [12, 3, 12], fov: 45 }}>
+          <Suspense fallback={null}>
+            <ambientLight intensity={0.5} />
+            <directionalLight position={[10, 10, 5]} intensity={1} />
+            <Environment preset="city" />
+            <AttitudeModel pitch={pitch} roll={roll} yaw={yaw} setReady={setReady} />
+            <ContactShadows position={[0, -1, 0]} opacity={0.5} scale={10} blur={2} far={4} />
+            <OrbitControls enableZoom={true} enablePan={false} />
+          </Suspense>
+        </Canvas>
       </div>
 
-      {!ready && !failed && (
+      {!ready && (
         <div className={styles.loading}>
           <div className={styles.spinner} />
-          <span>Spinning up 3D telemetry...</span>
-        </div>
-      )}
-
-      {failed && (
-        <div className={styles.loading}>
-          <Warning size={28} weight="duotone" />
-          <span>3D model unavailable. Telemetry still live below.</span>
+          <span>Loading Cybertruck...</span>
         </div>
       )}
 
