@@ -48,6 +48,7 @@ typedef struct {
     pthread_mutex_t     mutex;
     dumpType_t          dumpType;
     int                 dumpRawCount;
+    bool                streamMode;
 } dumpFrameContext_t;
 
 static int stopApp(camera_handle_t handle,
@@ -177,7 +178,44 @@ static void dumpFrame(camera_handle_t handle, camera_buffer_t* buffer, void* arg
         return;
     }
 
-    if (dumpType == DUMP_RAW) {
+    if (context->streamMode) {
+        static bool metaPrinted = false;
+        err = getBufferSize(*buffer, context->frametype, &bufferSize);
+        if (err == EOK) {
+            if (!metaPrinted) {
+                int width = 0, height = 0, stride = 0;
+                switch ((int)context->frametype) {
+                    case (int) CAMERA_FRAMETYPE_BGR8888:
+                        width = buffer->framedesc.bgr8888.width;
+                        height = buffer->framedesc.bgr8888.height;
+                        stride = buffer->framedesc.bgr8888.stride;
+                        break;
+                    case (int) CAMERA_FRAMETYPE_RGB8888:
+                        width = buffer->framedesc.rgb8888.width;
+                        height = buffer->framedesc.rgb8888.height;
+                        stride = buffer->framedesc.rgb8888.stride;
+                        break;
+                    case (int) CAMERA_FRAMETYPE_NV12:
+                        width = buffer->framedesc.nv12.width;
+                        height = buffer->framedesc.nv12.height;
+                        stride = buffer->framedesc.nv12.stride;
+                        break;
+                    default:
+                        width = buffer->framedesc.bgr8888.width;
+                        height = buffer->framedesc.bgr8888.height;
+                        stride = buffer->framedesc.bgr8888.stride;
+                        break;
+                }
+                (void) fprintf(stderr, "[Camera] Meta: %dx%d fmt=%d stride=%d size=%zu\n", 
+                              width, height, (int)context->frametype, stride, bufferSize);
+                (void) fflush(stderr);
+                metaPrinted = true;
+            }
+            (void) fwrite(buffer->framebuf, bufferSize, 1, stdout);
+            (void) fflush(stdout);
+            context->dumpRawCount += 1;
+        }
+    } else if (dumpType == DUMP_RAW) {
         err = snprintf(fileName,
                        sizeof(fileName),
                        "%s/frame%d.raw",
@@ -285,7 +323,7 @@ int main(int argc, char *argv[])
     camera_unit_t       cameraUnit = CAMERA_UNIT_1;
     dumpFrameContext_t  dumpFrameContext = {0};
 
-    while ((opt = getopt(argc, argv, "f:u:")) != -1) {
+    while ((opt = getopt(argc, argv, "f:u:s")) != -1) {
         switch (opt) {
         case (int) 'f':
             userPathGiven = true;
@@ -305,6 +343,9 @@ int main(int argc, char *argv[])
             } else {
                 cameraUnit = (camera_unit_t) unitLong;
             }
+            break;
+        case (int) 's':
+            dumpFrameContext.streamMode = true;
             break;
         default:
             break;
@@ -333,26 +374,34 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    // Immediately request a raw frame dump
-    err = pthread_mutex_lock(&dumpFrameContext.mutex);
-    if (err == EOK) {
-        dumpFrameContext.dumpType = DUMP_RAW;
-        pthread_mutex_unlock(&dumpFrameContext.mutex);
+    if (dumpFrameContext.streamMode) {
+        // Run a loop checking stdout health. If the parent exits or closes the pipe,
+        // writing to stdout will error out.
+        while (ferror(stdout) == 0) {
+            usleep(100000); // 100ms
+        }
     } else {
-        (void) stopApp(cameraHandle, &dumpFrameContext, flags);
-        return -1;
-    }
+        // Immediately request a raw frame dump
+        err = pthread_mutex_lock(&dumpFrameContext.mutex);
+        if (err == EOK) {
+            dumpFrameContext.dumpType = DUMP_RAW;
+            pthread_mutex_unlock(&dumpFrameContext.mutex);
+        } else {
+            (void) stopApp(cameraHandle, &dumpFrameContext, flags);
+            return -1;
+        }
 
-    // Wait until the callback captures the frame and increments dumpRawCount
-    int timeout_count = 0;
-    while (dumpFrameContext.dumpRawCount == 0 && timeout_count < 100) {
-        usleep(50000); // 50ms sleep
-        timeout_count++;
-    }
+        // Wait until the callback captures the frame and increments dumpRawCount
+        int timeout_count = 0;
+        while (dumpFrameContext.dumpRawCount == 0 && timeout_count < 100) {
+            usleep(50000); // 50ms sleep
+            timeout_count++;
+        }
 
-    if (dumpFrameContext.dumpRawCount == 0) {
-        (void) fprintf(stderr, "[Camera] Error: Timeout waiting for camera frame.\n");
-        err = ETIMEDOUT;
+        if (dumpFrameContext.dumpRawCount == 0) {
+            (void) fprintf(stderr, "[Camera] Error: Timeout waiting for camera frame.\n");
+            err = ETIMEDOUT;
+        }
     }
 
     // Cleanup on exit

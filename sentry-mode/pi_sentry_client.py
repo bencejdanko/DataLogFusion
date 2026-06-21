@@ -10,7 +10,7 @@ import threading
 SIG_PIN = 21
 LED_PIN = 20
 # Replace with your laptop's local IP address on your network
-LAPTOP_URL = "http://172.20.10.3:8080/feed" 
+LAPTOP_URL = "http://172.20.10.4:8080/feed" 
 STREAM_TIMEOUT = 10 # Keep streaming 10 seconds after last motion detection
 DOWNSAMPLE_FACTOR = 2 # Factor to downsample raw YCBYCR frame (1 to disable)
 POST_TIMEOUT = 5.0 # Timeout in seconds for HTTP upload POST requests
@@ -66,7 +66,49 @@ def downsample_ycbycr(frame_bytes, width, height, factor=2):
 def camera_stream_worker():
     global streaming
     print("[Camera] Background thread started. Streaming using QNX camera_capture C utility...")
+    
+    proc = None
     try:
+        # Spawn the persistent C capture utility in stream mode (-s)
+        proc = subprocess.Popen(
+            [BINARY_PATH, "-s"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            bufsize=0
+        )
+        
+        # Read the metadata from stderr (should be printed on start)
+        meta_line = None
+        while proc.poll() is None:
+            line = proc.stderr.readline().decode('utf-8', errors='ignore').strip()
+            if not line:
+                time.sleep(0.01)
+                continue
+            if "[Camera] Meta:" in line:
+                meta_line = line
+                break
+            else:
+                print(f"[Camera C-API Msg] {line}")
+        
+        if not meta_line:
+            if proc.poll() is not None:
+                stderr_content = proc.stderr.read().decode('utf-8', errors='ignore')
+                print(f"[Camera] Failed to start. Process exited with {proc.returncode}. Stderr: {stderr_content}")
+            else:
+                print("[Camera] Failed to receive metadata from camera capture process.")
+            streaming = False
+            return
+
+        parts = meta_line.split()
+        dims = parts[2].split("x")
+        width = int(dims[0])
+        height = int(dims[1])
+        fmt = int(parts[3].split("=")[1])
+        stride = int(parts[4].split("=")[1])
+        size = int(parts[5].split("=")[1])
+        
+        print(f"[Camera] Streaming initialized: {width}x{height} fmt={fmt} size={size}")
+
         while True:
             with stream_lock:
                 is_active = (time.time() - last_trigger_time < STREAM_TIMEOUT)
@@ -76,81 +118,58 @@ def camera_stream_worker():
                     break
             
             try:
-                # Clean up any leftover file from a previous frame
-                if os.path.exists(RAW_FILE):
-                    os.remove(RAW_FILE)
+                # Read exactly `size` bytes from the process's stdout
+                frame_bytes = b""
+                while len(frame_bytes) < size:
+                    chunk = proc.stdout.read(size - len(frame_bytes))
+                    if not chunk:
+                        raise BrokenPipeError("Camera capture stdout closed prematurely")
+                    frame_bytes += chunk
+                
+                # Apply downsampling if requested and supported
+                curr_width, curr_height, curr_stride = width, height, stride
+                curr_frame_bytes = frame_bytes
+                
+                if fmt == 14 and DOWNSAMPLE_FACTOR > 1:
+                    curr_frame_bytes, new_w, new_h = downsample_ycbycr(frame_bytes, width, height, DOWNSAMPLE_FACTOR)
+                    curr_width = new_w
+                    curr_height = new_h
+                    curr_stride = new_w * 2
 
-                # Execute compiled C capture utility
-                # It dumps the single frame to /tmp/frame0.raw and writes meta to stdout
-                result = subprocess.run(
-                    [BINARY_PATH, "-f", DUMP_DIR],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    timeout=3.0
+                # POST raw pixels directly to laptop with metadata headers
+                req = urllib.request.Request(
+                    LAPTOP_URL, 
+                    data=curr_frame_bytes, 
+                    headers={
+                        'Content-Type': 'application/octet-stream',
+                        'X-Width': str(curr_width),
+                        'X-Height': str(curr_height),
+                        'X-Format': str(fmt),
+                        'X-Stride': str(curr_stride)
+                    }
                 )
-                
-                # Parse stdout for: "[Camera] Meta: <width>x<height> fmt=<fmt> stride=<stride> size=<size>"
-                meta_line = None
-                for line in result.stdout.split("\n"):
-                    if "[Camera] Meta:" in line:
-                        meta_line = line
-                        break
-                
-                if meta_line and os.path.exists(RAW_FILE):
-                    parts = meta_line.split()
-                    dims = parts[2].split("x")
-                    width = int(dims[0])
-                    height = int(dims[1])
-                    fmt = int(parts[3].split("=")[1])
-                    stride = int(parts[4].split("=")[1])
-                    
-                    with open(RAW_FILE, "rb") as f:
-                        frame_bytes = f.read()
-                    
-                    # Sanity check frame size
-                    expected_size = width * height * 2
-                    if len(frame_bytes) < expected_size:
-                        print(f"[Camera] Warning: Read truncated local file of size {len(frame_bytes)} (expected {expected_size})")
-                    
-                    # Apply downsampling if requested and supported
-                    if fmt == 14 and DOWNSAMPLE_FACTOR > 1:
-                        frame_bytes, new_w, new_h = downsample_ycbycr(frame_bytes, width, height, DOWNSAMPLE_FACTOR)
-                        # print(f"[Camera] Downsampled from {width}x{height} to {new_w}x{new_h} ({len(frame_bytes)} bytes)")
-                        width = new_w
-                        height = new_h
-                        stride = new_w * 2
-
-                    # POST raw pixels directly to laptop with metadata headers
-                    req = urllib.request.Request(
-                        LAPTOP_URL, 
-                        data=frame_bytes, 
-                        headers={
-                            'Content-Type': 'application/octet-stream',
-                            'X-Width': str(width),
-                            'X-Height': str(height),
-                            'X-Format': str(fmt),
-                            'X-Stride': str(stride)
-                        }
-                    )
-                    with urllib.request.urlopen(req, timeout=POST_TIMEOUT) as response:
-                        response.read()
-                else:
-                    # Thread cooldown on capture failure to prevent fast loop spam
-                    time.sleep(1.0)
+                with urllib.request.urlopen(req, timeout=POST_TIMEOUT) as response:
+                    response.read()
             except Exception as e:
                 print("[Camera] Capture or transfer failed:", e)
+                if isinstance(e, (BrokenPipeError, ConnectionResetError)) or (proc.poll() is not None):
+                    print("[Camera] Subprocess died. Stopping camera stream worker.")
+                    break
                 time.sleep(1.0)
             
-            # Send at ~20 FPS (50ms loop interval)
-            time.sleep(0.05)
+            time.sleep(0.01)
+    except Exception as e:
+        print("[Camera] Stream worker exception:", e)
     finally:
-        # Clean up raw file
-        if os.path.exists(RAW_FILE):
+        if proc:
             try:
-                os.remove(RAW_FILE)
+                proc.terminate()
+                proc.wait(timeout=1.0)
             except Exception:
-                pass
+                try:
+                    proc.kill()
+                except Exception:
+                    pass
         print("[Camera] Background thread finished.")
 
 def main():

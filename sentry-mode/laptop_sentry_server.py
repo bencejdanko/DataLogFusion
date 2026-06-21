@@ -1,6 +1,10 @@
 import time
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from socketserver import ThreadingMixIn
+
+class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
+    daemon_threads = True
 
 # Thread-safe buffer for the latest camera frame
 latest_frame = None
@@ -102,7 +106,7 @@ class SentryHubHandler(BaseHTTPRequestHandler):
 
 def main():
     # Bind to 0.0.0.0 so the Pi on the local network can hit it
-    server = HTTPServer(('0.0.0.0', 8080), SentryHubHandler)
+    server = ThreadingHTTPServer(('0.0.0.0', 8080), SentryHubHandler)
     print("Sentry Hub broadcasting at: http://localhost:8080/stream.mjpg")
     print("Point your Cloudflare Tunnel to this port.")
     try:
