@@ -93,8 +93,9 @@ export const useSensorStream = (activeVehicleId: string | null) => {
               setEmergencyType(incidentType);
             }
           } else {
+            // Once the sensor returns to normal, re-arm the trigger for future incidents.
+            // DO NOT automatically dismiss the popup; wait for explicit resetEmergency call.
             acknowledgedRef.current = false;
-            setEmergencyType(null);
           }
         }
       } catch (err) {

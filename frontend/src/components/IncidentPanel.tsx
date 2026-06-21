@@ -9,9 +9,13 @@ interface Incident {
   report: string;
 }
 
-export function IncidentPanel() {
+export function IncidentPanel({ forceShow = false }: { forceShow?: boolean }) {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [hasShown, setHasShown] = useState(false);
+
+  useEffect(() => {
+    if (forceShow) setHasShown(true);
+  }, [forceShow]);
 
   useEffect(() => {
     const poll = async () => {
