@@ -1,3 +1,6 @@
 redis_stream.py
 *.pyc
 redis-stream/main.c
+backend/.env
+.env
+backend/__pycache__/*
