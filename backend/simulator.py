@@ -25,7 +25,7 @@ async def simulator_worker():
         socket_connect_timeout=5,
     )
     
-    vehicles = ["V-002", "V-003"]
+    vehicles = ["V-002", "V-003", "V-004"]
     
     # Baseline values for a normal vehicle
     baseline = {

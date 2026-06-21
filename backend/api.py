@@ -123,7 +123,8 @@ async def get_vehicles():
     # Format as list of objects for frontend
     vehicle_names = {
         "V-002": "San Fierro Deputy",
-        "V-003": "Las Venturas Responder"
+        "V-003": "Las Venturas Responder",
+        "V-004": "Los Santos Cruisers"
     }
     return [{"id": v, "name": vehicle_names.get(v, f"Unit {v}"), "status": "healthy"} for v in sorted(vehicles)]
 
