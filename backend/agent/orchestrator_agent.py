@@ -27,6 +27,7 @@ orchestrator = Agent(
     port=8003,
     mailbox=True,
     publish_agent_details=True,
+    network="testnet",
 )
 
 chat_proto = Protocol(spec=chat_protocol_spec)

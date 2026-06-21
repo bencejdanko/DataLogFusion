@@ -225,8 +225,9 @@ agent = Agent(
     name="Predictive-Disaster-Monitor-Agent",
     seed=AGENT_SEED_PHRASE_DIS,
     port=8001,
-    mailbox=True,
+    endpoint=["http://127.0.0.1:8001/submit"],
     publish_agent_details=True,
+    network="testnet",
 )
 
 protocol = Protocol(spec=chat_protocol_spec)

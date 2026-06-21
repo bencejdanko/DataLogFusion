@@ -3,7 +3,7 @@ import os
 
 # Add parent directory to sys.path so config can be imported
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from config import AGENTVERSE_KEY, AGENT_SEED_PHRASE
+from config import AGENTVERSE_KEY, AGENT_SEED_PHRASE, AGENTVERSE_KEY_DIS, AGENT_SEED_PHRASE_DIS, AGENTVERSE_KEY_SYNTH, AGENT_SEED_PHRASE_SYNTH, AGENTVERSE_KEY_ORCH, AGENT_SEED_PHRASE_ORCH
 
 from uagents_core.utils.registration import (
     register_chat_agent,

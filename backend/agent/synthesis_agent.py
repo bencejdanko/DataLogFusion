@@ -30,9 +30,10 @@ client = OpenAI(
 agent = Agent(
     name="Predictive-Data-Synthesis-Agent",
     seed=AGENT_SEED_PHRASE_SYNTH,
-    port=8002,  # Use a different port than the analysis agent
-    mailbox=True,
+    port=8002,
+    endpoint=["http://127.0.0.1:8002/submit"],
     publish_agent_details=True,
+    network="testnet",
 )
 
 protocol = Protocol(spec=chat_protocol_spec)
