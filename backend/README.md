@@ -1,4 +1,4 @@
-# DataLogFusion Backend
+# Vanguard Telematics Backend
 
 HTTP API server that reads live sensor data from Redis Cloud and serves it to the dashboard.
 

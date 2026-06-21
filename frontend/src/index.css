@@ -1,20 +1,24 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root {
   /* Dark Tech Aesthetic */
-  --bg-color: #09090b; /* Zinc-950 */
+  --bg-color: #09090b;
+  /* Zinc-950 */
   --bg-gradient: radial-gradient(circle at 50% -20%, #18181b 0%, #09090b 100%);
-  
+
   --panel-bg: rgba(24, 24, 27, 0.4);
   --panel-border: rgba(255, 255, 255, 0.08);
-  
-  --text-main: #fafafa; /* Zinc-50 */
-  --text-muted: #a1a1aa; /* Zinc-400 */
-  
+
+  --text-main: #fafafa;
+  /* Zinc-50 */
+  --text-muted: #a1a1aa;
+  /* Zinc-400 */
+
   /* Accent: Electric Cyan / Blue */
-  --accent-blue: #06b6d4; /* Cyan-500 */
+  --accent-blue: #06b6d4;
+  /* Cyan-500 */
   --accent-blue-glow: rgba(6, 182, 212, 0.2);
-  
+
   /* Statuses */
   --status-healthy: #10b981;
   --status-warning: #f59e0b;
@@ -31,7 +35,9 @@
   box-sizing: border-box;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: inherit;
 }
 
@@ -56,21 +62,38 @@ body {
   -webkit-backdrop-filter: blur(16px);
   /* 1px inner border + inner shadow for physical edge refraction */
   border: 1px solid var(--panel-border);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 32px rgba(0, 0, 0, 0.4);
-  border-radius: 20px; /* Soft pill-like borders */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  /* Soft pill-like borders */
 }
 
 /* Animations */
 @keyframes pulse-emergency {
-  0% { box-shadow: 0 0 0 0 var(--status-emergency-glow); }
-  70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  0% {
+    box-shadow: 0 0 0 0 var(--status-emergency-glow);
+  }
+
+  70% {
+    box-shadow: 0 0 0 20px rgba(239, 68, 68, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
 }
 
 @keyframes flash-bg {
-  0% { background-color: rgba(239, 68, 68, 0.1); }
-  50% { background-color: rgba(239, 68, 68, 0.2); }
-  100% { background-color: rgba(239, 68, 68, 0.1); }
+  0% {
+    background-color: rgba(239, 68, 68, 0.1);
+  }
+
+  50% {
+    background-color: rgba(239, 68, 68, 0.2);
+  }
+
+  100% {
+    background-color: rgba(239, 68, 68, 0.1);
+  }
 }
 
 .emergency-active {
@@ -82,13 +105,16 @@ body {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }

@@ -1,7 +1,7 @@
 """
 main.py
 -------
-DataLogFusion Backend — Entry Point
+Vanguard Telematics Backend — Entry Point
 
 Runs the consumer API server (FastAPI + uvicorn).
 The API reads live data from Redis Cloud and serves it to the dashboard.
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     host = API_HOST
     port = API_PORT
 
-    print(f"Starting DataLogFusion API on http://{host}:{port}")
+    print(f"Starting Vanguard Telematics API on http://{host}:{port}")
     print("  GET /health    — Redis health check")
     print("  GET /latest    — latest sensor snapshot")
     print("  GET /history   — recent readings")
