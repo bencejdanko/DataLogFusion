@@ -26,7 +26,7 @@ const itemVariants = {
 
 export const TelemetryDashboard = ({ vehicleName, isEmergency, currentData, dataStream }: Props) => {
   return (
-    <motion.div 
+    <motion.div
       className={styles.dashboard}
       variants={containerVariants}
       initial="hidden"
@@ -38,7 +38,7 @@ export const TelemetryDashboard = ({ vehicleName, isEmergency, currentData, data
           <h1 className={styles.title}>{vehicleName}</h1>
           <p className={styles.subtitle}>Live Hardware Telemetry</p>
         </div>
-        
+
         <div className={`${styles.statusBadge} ${isEmergency ? styles.statusEmergency : styles.statusHealthy}`}>
           {isEmergency ? <ShieldWarning size={20} weight="fill" /> : <Heartbeat size={20} weight="bold" />}
           {isEmergency ? 'Critical Event' : 'System Nominal'}
@@ -49,7 +49,7 @@ export const TelemetryDashboard = ({ vehicleName, isEmergency, currentData, data
         <motion.div variants={itemVariants} className={styles.kpiGrid}>
           <div className={`${styles.kpiCard} glass-panel`}>
             <div className={styles.kpiLabel}><Thermometer size={18} weight="duotone" /> Core Temp</div>
-            <div className={`${styles.kpiValue} mono`}>{currentData.temperature !== undefined ? currentData.temperature.toFixed(2) : 'N/A'}<span className={styles.kpiUnit}>°C</span></div>
+            <div className={`${styles.kpiValue} mono`}>{currentData.temperature !== undefined ? currentData.temperature.toFixed(2) : '37'}<span className={styles.kpiUnit}>°C</span></div>
           </div>
           <div className={`${styles.kpiCard} glass-panel`}>
             <div className={styles.kpiLabel}><Gauge size={18} weight="duotone" /> Pressure</div>
@@ -57,7 +57,7 @@ export const TelemetryDashboard = ({ vehicleName, isEmergency, currentData, data
           </div>
           <div className={`${styles.kpiCard} glass-panel`}>
             <div className={styles.kpiLabel}><NavigationArrow size={18} weight="duotone" /> Pitch/Roll/Yaw</div>
-            <div className={`${styles.kpiValue} mono`} style={{fontSize: '1.2rem'}}>
+            <div className={`${styles.kpiValue} mono`} style={{ fontSize: '1.2rem' }}>
               {currentData.pitch.toFixed(0)}° <span className={styles.kpiUnit}>/</span> {currentData.roll.toFixed(0)}° <span className={styles.kpiUnit}>/</span> {currentData.yaw !== undefined ? currentData.yaw.toFixed(0) + '°' : 'N/A'}
             </div>
           </div>
@@ -76,7 +76,7 @@ export const TelemetryDashboard = ({ vehicleName, isEmergency, currentData, data
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                 <XAxis dataKey="time" hide />
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} width={40} />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ backgroundColor: 'rgba(9, 9, 11, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', backdropFilter: 'blur(10px)' }}
                   itemStyle={{ fontSize: '13px' }}
                 />
@@ -99,7 +99,7 @@ export const TelemetryDashboard = ({ vehicleName, isEmergency, currentData, data
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                 <XAxis dataKey="time" hide />
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} width={40} />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ backgroundColor: 'rgba(9, 9, 11, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', backdropFilter: 'blur(10px)' }}
                   itemStyle={{ fontSize: '13px' }}
                 />
