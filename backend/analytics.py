@@ -98,20 +98,15 @@ async def analytics_worker():
                     jerk = abs(g_force - state["prev_g_force"])
                     state["prev_g_force"] = g_force
                     
-                    # Rollover logic using 3D acceleration vector (robust against Euler lock/offsets)
-                    base_x = state["base_acc_x"]
-                    base_y = state["base_acc_y"]
-                    base_z = state["base_acc_z"]
-                    base_mag = math.sqrt(base_x**2 + base_y**2 + base_z**2)
+                    # Rollover logic using Gyroscope Vector ONLY
+                    gyr_x = float(fields.get("gyr_x", fields.get("gyr_x_mdps", 0)))
+                    gyr_y = float(fields.get("gyr_y", fields.get("gyr_y_mdps", 0)))
+                    gyr_z = float(fields.get("gyr_z", fields.get("gyr_z_mdps", 0)))
+                    gyr_mag = math.sqrt(gyr_x**2 + gyr_y**2 + gyr_z**2)
                     
-                    if acc_mag > 0 and base_mag > 0:
-                        dot_product = (acc_x * base_x) + (acc_y * base_y) + (acc_z * base_z)
-                        cos_theta = dot_product / (acc_mag * base_mag)
-                        # cos(60 degrees) = 0.5. If cos_theta < 0.5, tilt is > 60 degrees.
-                        if cos_theta < 0.5:
-                            state["tilt_frames"] += 1
-                        else:
-                            state["tilt_frames"] = 0
+                    # If rotation rate is high (e.g., > 30000 mdps = 30 dps) for a sustained period
+                    if gyr_mag > 30000.0:
+                        state["tilt_frames"] += 1
                     else:
                         state["tilt_frames"] = 0
                         
