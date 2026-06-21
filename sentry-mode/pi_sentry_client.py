@@ -26,6 +26,57 @@ last_attempt_time = 0  # Cooldown tracker
 streaming = False
 stream_lock = threading.Lock()
 
+def downsample_nv12(frame_bytes, width, height, factor=2):
+    """
+    Downsamples an NV12 frame by the given factor.
+    NV12 consists of:
+    - Y plane of size width * height (1 byte per pixel)
+    - UV plane of size width * height // 2 (interleaved U/V bytes)
+    """
+    if factor <= 1:
+        return frame_bytes, width, height
+
+    y_size = width * height
+    y_plane = frame_bytes[:y_size]
+    uv_plane = frame_bytes[y_size:]
+
+    new_width = width // factor
+    # Ensure new_width is even
+    if new_width % 2 != 0:
+        new_width = (new_width // 2) * 2
+
+    new_height = height // factor
+    if new_height % 2 != 0:
+        new_height = (new_height // 2) * 2
+
+    # Downsample Y plane
+    y_rows = []
+    for r in range(0, height, factor):
+        if len(y_rows) >= new_height:
+            break
+        row_start = r * width
+        row_data = y_plane[row_start : row_start + width]
+        y_rows.append(row_data[::factor])
+    new_y_bytes = b"".join(y_rows)
+
+    # Downsample UV plane
+    uv_rows = []
+    uv_width = width  # The stride of the UV plane is same as width (width/2 pairs * 2 bytes/pair)
+    uv_height = height // 2
+
+    for r in range(0, uv_height, factor):
+        if len(uv_rows) >= new_height // 2:
+            break
+        row_start = r * uv_width
+        row_data = uv_plane[row_start : row_start + uv_width]
+        # A UV pair is 2 bytes (U, V). We take every 'factor' pairs.
+        # So we slice with step = 2 * factor, taking 2 bytes each time.
+        chunks = [row_data[i : i + 2] for i in range(0, len(row_data), 2 * factor)]
+        uv_rows.append(b"".join(chunks)[:new_width])
+
+    new_uv_bytes = b"".join(uv_rows)
+    return new_y_bytes + new_uv_bytes, new_width, new_height
+
 def downsample_ycbycr(frame_bytes, width, height, factor=2):
     """
     Downsamples a YCBYCR (YUYV) frame by the given factor.
@@ -130,7 +181,12 @@ def camera_stream_worker():
                 curr_width, curr_height, curr_stride = width, height, stride
                 curr_frame_bytes = frame_bytes
                 
-                if fmt == 14 and DOWNSAMPLE_FACTOR > 1:
+                if fmt == 1 and DOWNSAMPLE_FACTOR > 1:
+                    curr_frame_bytes, new_w, new_h = downsample_nv12(frame_bytes, width, height, DOWNSAMPLE_FACTOR)
+                    curr_width = new_w
+                    curr_height = new_h
+                    curr_stride = new_w
+                elif fmt == 14 and DOWNSAMPLE_FACTOR > 1:
                     curr_frame_bytes, new_w, new_h = downsample_ycbycr(frame_bytes, width, height, DOWNSAMPLE_FACTOR)
                     curr_width = new_w
                     curr_height = new_h
@@ -174,14 +230,20 @@ def camera_stream_worker():
 
 def main():
     global last_trigger_time, last_attempt_time, streaming
+    import sys
+    
+    force_mode = "--force" in sys.argv or "--test" in sys.argv
+    if force_mode:
+        print("[Pi] Force/test mode active. Bypassing IR sensor trigger and streaming continuously.")
+        
     GPIO.setup(SIG_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.setup(LED_PIN, GPIO.OUT)
     
     print("Pi Sentry monitoring IR sensor...")
     try:
         while True:
-            # Active-low detection: 0 = obstacle detected
-            if GPIO.input(SIG_PIN) == 0:
+            # Active-low detection: 0 = obstacle detected, or force_mode is True
+            if force_mode or GPIO.input(SIG_PIN) == 0:
                 GPIO.output(LED_PIN, GPIO.HIGH)
                 
                 with stream_lock:

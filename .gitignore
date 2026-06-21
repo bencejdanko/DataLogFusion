@@ -4,3 +4,4 @@ redis-stream/main.c
 backend/.env
 .env
 backend/__pycache__/*
+rpi5_bsp_temp

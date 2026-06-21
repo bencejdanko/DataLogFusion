@@ -28,14 +28,22 @@ qcc -Vgcc_ntoaarch64le -o camera_capture camera_capture.c -lcamapi
 
 ## 2. Raspberry Pi Setup (QNX 8.0)
 
-### A. Transfer files to the Pi
-On your host laptop terminal, copy the pre-compiled binary and the controller client to the Pi:
-```bash
-# Copy the compiled C binary
-scp -o MACs=hmac-sha2-256 camera_capture qnxuser@172.20.10.7:/data/home/qnxuser/
+### A. Copy Drivers and Configuration to the Pi
+From the `sentry-mode` directory on your host laptop, copy the files one by one:
 
-# Copy the Python client script
-scp -o MACs=hmac-sha2-256 pi_sentry_client.py qnxuser@172.20.10.7:/data/home/qnxuser/
+```bash
+scp -o MACs=hmac-sha2-256 rpi5_camera_module3_custom.conf "C:\Users\bence\qnx800\target\qnx\aarch64le\usr\lib\libimx708_external_camera.so" "C:\Users\bence\qnx800\target\qnx\aarch64le\usr\lib\libsensor_platform_broadcom_rpi5.so" camera_capture pi_sentry_client.py qnxuser@172.20.10.7:/data/home/qnxuser/
+```
+
+```bash
+# Stop the running sensor daemon
+sudo slay sensor
+
+# Create a writable roll directory for sensor files
+mkdir -p /data/home/qnxuser/roll
+
+# Start the sensor daemon with the physical camera config in the background
+sudo sensor -U 521:521,1001 -b external -r /data/home/qnxuser/roll -c /data/home/qnxuser/rpi5_camera_module3_custom.conf &
 ```
 
 ### B. Run the Sentry Client
@@ -43,9 +51,13 @@ SSH into your Raspberry Pi and start the Python controller:
 ```bash
 # SSH onto the Pi
 ssh qnxuser@172.20.10.7
+# ssh -m hmac-sha2-256 qnxuser@172.20.10.7
 
-# Run the controller
+# Run the controller (monitors IR sensor)
 python pi_sentry_client.py
+
+# OR force continuous streaming for testing (bypasses IR sensor)
+python pi_sentry_client.py --test
 ```
 
 ### C. Downsampling & Network Timeout Configuration

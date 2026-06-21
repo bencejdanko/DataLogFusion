@@ -130,7 +130,7 @@ int getBufferSize(camera_buffer_t buffer, camera_frametype_t frametype, size_t* 
         *size = buffer.framedesc.rgb8888.stride * buffer.framedesc.rgb8888.height;
         break;
     case (int) CAMERA_FRAMETYPE_NV12:
-        *size = buffer.framedesc.nv12.stride * buffer.framedesc.nv12.height;
+        *size = (buffer.framedesc.nv12.stride * buffer.framedesc.nv12.height * 3) / 2;
         break;
     case (int) CAMERA_FRAMETYPE_YCBYCR:
         *size = buffer.framedesc.bgr8888.stride * buffer.framedesc.bgr8888.height;
