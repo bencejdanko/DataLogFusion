@@ -15,7 +15,7 @@ from handlers import on_chat, on_commit, on_reject  # noqa: E402
 
 agent = Agent(
     name="stripe-horoscope-agent",
-    seed=os.getenv("AGENT_SEED", "stripe-horoscope-agent-test"),
+    seed=os.getenv("AGENT_SEED", "datalogfusion-stripe-horoscope-seed-unique"),
     port=int(os.getenv("AGENT_PORT", "8012")),
     mailbox=True,
     publish_agent_details=True,
