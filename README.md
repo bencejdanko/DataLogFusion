@@ -1,4 +1,6 @@
-# Vanguard Telematics: DataLogFusion
+# Vanguard Telematics: UC Berkeley AI Hackathon
+
+### 1st place prize QNX track + honorable mentions @ Fetch AI
 
 *They protect us. Who protects them? This is more than a hackathon idea... Vanguard Telematics is our effort to ensure that those who run toward danger are never left behind in the data silence.*
 
